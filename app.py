@@ -38,18 +38,25 @@ elif page == "Username Scraper":
     limit = st.slider("Number of Posts", min_value=1, max_value=100, value=10)
 
     if st.button("Scrape Usernames"):
-        with st.spinner("🔍 Fetching data..."):
+        with st.spinner("Fetching data..."):
             reddit = reddit_instance()
             posts = fetch_subreddit_posts(reddit, subreddit_input, post_type, limit)
-            usernames = extract_usernames(posts)
-            os.makedirs("data", exist_ok=True)
-            save_usernames_to_csv(usernames)
+            user_data = extract_usernames(posts)  # returns list of dicts now
 
-            st.success(f"✅ Scraped {len(usernames)} unique usernames.")
-            st.dataframe([{"username": u} for u in usernames])
+            if not user_data:
+                st.warning("No messageable users found.")
+            else:
+                import pandas as pd
+                df = pd.DataFrame(user_data)
+                os.makedirs("data", exist_ok=True)
+                df.to_csv("data/usernames.csv", index=False)
 
-            with open("data/usernames.csv", "rb") as f:
-                st.download_button("📥 Download CSV", f, file_name="usernames.csv")
+                st.success(f"✅ Scraped {len(df)} messageable usernames.")
+                st.dataframe(df)
+
+                with open("data/usernames.csv", "rb") as f:
+                    st.download_button("Download CSV", f, file_name="usernames.csv")
+
 
 
 
